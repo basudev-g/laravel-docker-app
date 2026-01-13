@@ -1,0 +1,34 @@
+services:
+  app:
+    build: .
+    container_name: laravel-app
+    ports:
+      - "8000:80"
+    volumes:
+      - ./src:/var/www/html
+      - ./php.ini:/usr/local/etc/php/php.ini
+    environment:
+      - APACHE_DOCUMENT_ROOT=/var/www/html/public
+
+  db:
+    image: mysql:8.0
+    container_name: laravel-docker
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: laravel_docker
+    ports:
+      - "33061:3306"
+
+  # এখান থেকে phpMyAdmin শুরু
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: laravel-phpmyadmin
+    restart: always
+    ports:
+      - "8082:80" # ব্রাউজারে ৮-০-৮-১ পোর্টে এটি ওপেন হবে
+    environment:
+      - PMA_HOST=db # এখানে অবশ্যই আপনার mysql সার্ভিসের নাম (db) দিতে হবে
+      - PMA_PORT=3306
+      - MYSQL_ROOT_PASSWORD=password # আপনার দেওয়া পাসওয়ার্ডটি এখানে দিন
+    depends_on:
+      - db

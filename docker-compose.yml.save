@@ -1,0 +1,20 @@
+services:
+  app:
+    build: .
+    container_name: laravel-app
+    ports:
+      - "8000:80"
+    volumes:
+      - ./src:/var/www/html
+      - ./php.ini:/usr/local/etc/php/php.ini
+    environment:
+      - APACHE_DOCUMENT_ROOT=/var/www/html/public
+
+  db:
+    image: mysql:8.0
+    container_name: laravel_docker
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: laravel_db
+    ports:
+      - "33061:3306"
