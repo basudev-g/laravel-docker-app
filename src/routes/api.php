@@ -23,4 +23,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:user')->group(function () {
         Route::get('/user/profile', fn() => auth()->user());
     });
+
+    Route::get('/user/profile', function () {
+    return auth()->user()->load('roles');
+    });
+
+
+    Route::middleware(['role:admin'])->get('/admin/users', function () {
+        return \App\Models\User::select('name','email','created_at')->get();
+    });
 });

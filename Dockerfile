@@ -1,6 +1,6 @@
 FROM php:8.4-apache
 
-# ১. লারাভেলের জন্য প্রয়োজনীয় সিস্টেম লাইব্রেরি ইন্সটল
+# সিস্টেম লাইব্রেরি ইন্সটল
 RUN apt-get update && apt-get install -y \
     libpng-dev \
     libonig-dev \
@@ -11,20 +11,22 @@ RUN apt-get update && apt-get install -y \
     curl \
     libzip-dev
 
-# ২. পিএইচপি এক্সটেনশন ইন্সটল
+# পিএইচপি এক্সটেনশন ইন্সটল (আলাদা RUN ব্যবহার করুন)
 RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
 
-# ৩. অ্যাপাচি মোড-রিরাইট এনাবল করা (লারাভেলের রুটিংয়ের জন্য জরুরি)
-RUN a2enmod rewrite
-
-# ৪. কম্পোজার (Composer) ইন্সটল করা
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-
-# ৫. আমাদের কাস্টম php.ini ফাইল কপি করা (পরের ধাপে এটি বানাবো)
-# COPY php.ini /usr/local/etc/php/
-
-# Apache কনফিগারেশনে ডকুমেন্ট রুট পরিবর্তন করা
+# ৩. অ্যাপাচি কনফিগারেশন এবং মোড-রিরাইট এনাবল করা
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public
-
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+RUN a2enmod rewrite
+
+# ৪. কম্পোজার ইন্সটল
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# ৫. পারমিশন ফিক্স: আপনার পিসির ইউজারের (১০০০) সাথে ডকার ইউজারকে সিঙ্ক করা
+RUN usermod -u 1000 www-data && groupmod -g 1000 www-data
+
+WORKDIR /var/www/html
+
+# ৬. প্রজেক্ট ফাইল কপি করার আগে ওনারশিপ সেট করা
+RUN chown -R www-data:www-data /var/www/html
